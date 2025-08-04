@@ -1,11 +1,11 @@
 import logging
+import os
 from datetime import datetime
 from json import JSONDecodeError
 
 import polars as pl
 import requests
 from tqdm import tqdm
-import os
 
 from ..models import get_conn
 
@@ -35,7 +35,9 @@ class DataPull:
         if not os.path.exists(self.saving_dir + "external"):
             os.makedirs(self.saving_dir + "external")
 
-    def pull_query(self, flow:str, region:str, params: list, year: int) -> pl.DataFrame:
+    def pull_query(
+        self, flow: str, region: str, params: list, year: int
+    ) -> pl.DataFrame:
         # prepare custom census query
         param = ",".join(params)
         base = "https://api.census.gov/data/"
@@ -52,7 +54,7 @@ class DataPull:
         df = df.drop("column_0").transpose()
         return df.rename(names).with_columns(year=pl.lit(year))
 
-    def pull_dp03(self, flow:str, region:str, params:list) -> pl.DataFrame:
+    def pull_dp03(self, flow: str, region: str, params: list) -> pl.DataFrame:
         for _year in range(2014, datetime.now().year):
             try:
                 logging.info(f"pulling {_year} data")
@@ -72,7 +74,10 @@ class DataPull:
                 # print(df.count())
 
                 # Create table only once
-                if "DP03Table" not in self.conn.sql("SHOW TABLES;").df().get("name").tolist():
+                if (
+                    "DP03Table"
+                    not in self.conn.sql("SHOW TABLES;").df().get("name").tolist()
+                ):
                     self.conn.sql("CREATE TABLE DP03Table AS SELECT * FROM df")
                 else:
                     self.conn.sql("INSERT INTO DP03Table BY NAME SELECT * FROM df")
@@ -84,7 +89,6 @@ class DataPull:
                 continue
 
         return self.conn.sql("SELECT * FROM DP03Table").pl()
-
 
     def pull_file(self, url: str, filename: str, verify: bool = True) -> None:
         """
