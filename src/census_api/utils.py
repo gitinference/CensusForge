@@ -38,3 +38,36 @@ class DataPull:
             gdf = gpd.read_file(temp_filename)
             gdf.to_parquet(filename)
         return gpd.read_parquet(filename)
+
+    def get_database_id(self, name: str) -> int:
+        id = self.conn.execute(
+            """
+            SELECT id FROM sqlite_db.dataset_table WHERE dataset=?;
+            """,
+            (name,),
+        ).fetchone()
+        if id is None:
+            raise ValueError(f"{name} is not a valid database run REPLACE ME")
+        return id[0]
+
+    def get_variable_id(self, name: str) -> int:
+        id = self.conn.execute(
+            """
+            SELECT id FROM sqlite_db.variable_table WHERE dataset=?;
+            """,
+            (name,),
+        ).fetchone()
+        if id is None:
+            raise ValueError(f"{name} is not a valid variable run REPLACE ME")
+        return id[0]
+
+    def get_geo_id(self, name: str) -> int:
+        id = self.conn.execute(
+            """
+            SELECT id FROM sqlite_db.geo_table WHERE dataset=?;
+            """,
+            (name,),
+        ).fetchone()
+        if id is None:
+            raise ValueError(f"{name} is not a valid geography run REPLACE ME")
+        return id[0]
