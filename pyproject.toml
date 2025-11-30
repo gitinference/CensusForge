@@ -7,7 +7,13 @@ authors = [
     { name = "Alejandro Ouslan", email = "alejandro.ouslan@upr.edu" }
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "duckdb>=1.4.2",
+    "geopandas>=1.1.1",
+    "jp-tools>=0.3.1",
+    "polars>=1.35.2",
+    "requests>=2.32.5",
+]
 
 [project.scripts]
 census-api = "census_api:main"

@@ -1,2 +1,1 @@
-def main() -> None:
-    print("Hello from census-api!")
+from .utils import data_pull
