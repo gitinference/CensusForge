@@ -12,6 +12,7 @@ dependencies = [
     "geopandas>=1.1.1",
     "jp-tools>=0.3.1",
     "polars>=1.35.2",
+    "pyarrow>=22.0.0",
     "requests>=2.32.5",
     "setuptools>=80.9.0",
 ]
@@ -22,3 +23,15 @@ census-api = "census_api:main"
 [build-system]
 requires = ["uv_build>=0.9.13,<0.10.0"]
 build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "cairosvg>=2.8.2",
+    "jupyter>=1.1.1",
+    "jupytext>=1.18.1",
+    "kaleido>=1.2.0",
+    "pnglatex>=1.1",
+    "pre-commit>=4.5.0",
+    "pynvim>=0.6.0",
+    "pyperclip>=1.11.0",
+]

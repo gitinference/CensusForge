@@ -4,7 +4,7 @@ from jp_tools import download
 import logging
 import os
 import tempfile
-import pkg_resources
+import importlib.resources as resources
 
 
 class DataPull:
@@ -15,17 +15,7 @@ class DataPull:
     ):
         self.saving_dir = saving_dir
         self.conn = duckdb.connect()
-
-        # Resolve the path to the database file
-        db_path = pkg_resources.resource_filename(__name__, "database.db")
-
-        # Check if the database file exists
-        if not os.path.exists(db_path):
-            raise FileNotFoundError(f"Database file not found at {db_path}")
-
-        self.db_file = db_path
-
-        # Load SQLite extension and attach the database
+        self.db_file = str(resources.files("census_api").joinpath("database.db"))
         self.conn.execute("LOAD sqlite;")
         self.conn.execute(f"ATTACH '{self.db_file}' AS sqlite_db (TYPE sqlite);")
 
