@@ -27,9 +27,9 @@ class DataPull:
         )
 
         # Ensure saving directories exist
-        os.makedirs(os.path.join(self.saving_dir, "raw"), exist_ok=True)
-        os.makedirs(os.path.join(self.saving_dir, "processed"), exist_ok=True)
-        os.makedirs(os.path.join(self.saving_dir, "external"), exist_ok=True)
+        # os.makedirs(os.path.join(self.saving_dir, "raw"), exist_ok=True)
+        # os.makedirs(os.path.join(self.saving_dir, "processed"), exist_ok=True)
+        # os.makedirs(os.path.join(self.saving_dir, "external"), exist_ok=True)
 
     def pull_geos(self, url: str, filename: str) -> gpd.GeoDataFrame:
         if not os.path.exists(filename):
