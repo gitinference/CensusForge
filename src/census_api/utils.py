@@ -42,7 +42,7 @@ class DataPull:
     def get_database(self, database_id: str) -> str:
         name = self.conn.execute(
             """
-            SELECT dataset FROM sqlite_db.dataset_table WHERE dataset=?;
+            SELECT dataset FROM sqlite_db.dataset_table WHERE id=?;
             """,
             (database_id,),
         ).fetchone()
@@ -124,3 +124,14 @@ class DataPull:
 
     def get_geo(self):
         pass
+
+    def get_dataset_url(self, dataset_name: str) -> str:
+        name = self.conn.execute(
+            """
+            SELECT api_url FROM sqlite_db.dataset_table WHERE dataset=?;
+            """,
+            (dataset_name,),
+        ).fetchone()
+        if name is None:
+            raise ValueError(f"{dataset_name} is not a valid database run REPLACE ME")
+        return name[0]
