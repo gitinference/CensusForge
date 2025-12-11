@@ -1,10 +1,11 @@
-import duckdb
-import geopandas as gpd
-from jp_tools import download
+import importlib.resources as resources
 import logging
 import os
 import tempfile
-import importlib.resources as resources
+
+import duckdb
+import geopandas as gpd
+from jp_tools import download
 
 
 class DataPull:
@@ -15,7 +16,7 @@ class DataPull:
     ):
         self.saving_dir = saving_dir
         self.conn = duckdb.connect()
-        self.db_file = str(resources.files("census_api").joinpath("database.db"))
+        self.db_file = str(resources.files("CensusForge").joinpath("database.db"))
         self.conn.execute("LOAD sqlite;")
         self.conn.execute(f"ATTACH '{self.db_file}' AS sqlite_db (TYPE sqlite);")
 

@@ -1,8 +1,8 @@
-import census_api
+from CensusForge import CensusAPI
 
 
 def main():
-    ca = census_api.CensusAPI
+    ca = CensusAPI()
     print(
         ca.query(
             dataset="acs-acs1-pumspr",
