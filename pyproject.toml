@@ -1,6 +1,6 @@
 [project]
 name = "CensusForge"
-dynamic = ["version"]
+version = "0.2.1"
 description = "Add your description here"
 readme = "README.md"
 authors = [{ name = "Alejandro Ouslan", email = "alejandro.ouslan@upr.edu" }]
@@ -19,14 +19,8 @@ dependencies = [
 census-api = "CensusForge:main"
 
 [build-system]
-requires = ["hatchling", "uv-dynamic-versioning"]
+requires = ["hatchling"]
 build-backend = "hatchling.build"
-
-[tool.hatch.version]
-source = "uv-dynamic-versioning"
-
-[tool.uv-dynamic-versioning]
-fallback-version = "0.0.0"
 
 [dependency-groups]
 dev = [
