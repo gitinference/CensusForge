@@ -1,8 +1,8 @@
-from census_api import CensusAPI
+import census_api
 
 
 def main():
-    ca = CensusAPI()
+    ca = census_api.CensusAPI
     print(
         ca.query(
             dataset="acs-acs1-pumspr",
