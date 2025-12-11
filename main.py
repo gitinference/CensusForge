@@ -1,4 +1,4 @@
-from census_api import CensusAPI
+from CensusForge import CensusAPI
 
 
 def main():
