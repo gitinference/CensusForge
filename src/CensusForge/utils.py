@@ -8,7 +8,7 @@ import geopandas as gpd
 from jp_tools import download
 
 
-class DataPull:
+class CensusUtils:
     def __init__(
         self,
         saving_dir: str = "data/",
@@ -223,7 +223,7 @@ class DataPull:
         """
         id = self.conn.execute(
             """
-            SELECT id FROM sqlite_db.variable_table WHERE dataset=?;
+            SELECT id FROM sqlite_db.variable_table WHERE var_name=?;
             """,
             (name,),
         ).fetchone()
@@ -337,5 +337,42 @@ class DataPull:
             (dataset_name,),
         ).fetchone()
         if name is None:
-            raise ValueError(f"{dataset_name} is not a valid database run REPLACE ME")
+            raise ValueError(
+                f"{dataset_name} is not a valid database run self.get_all_datasets()"
+            )
         return name[0]
+
+    def get_available_years(self, dataset: str):
+        dataset_id = self.get_database_id(name=dataset)
+        query = self.conn.execute(
+            """
+            SELECT 
+                GROUP_CONCAT(DISTINCT y.year) AS available_years
+            FROM sqlite_db.variable_interm AS v
+            INNER JOIN sqlite_db.year_table AS y 
+                ON v.year_id = y.id
+            WHERE v.dataset_id = ?;
+            """,
+            (dataset_id,),
+        ).fetchall()
+
+        year_list = list(map(int, query[0][0].split(","))) if query[0][0] else []
+        return sorted(year_list)
+
+    def get_available_variables(self, variable: str, year: int):
+        variable_id = self.get_variable_id(name=variable)
+        year_id = self.get_year_id(year=year)
+        query = self.conn.execute(
+            """
+            SELECT 
+                GROUP_CONCAT(DISTINCT y.year) AS available_years
+            FROM sqlite_db.variable_interm AS v
+            INNER JOIN sqlite_db.year_table AS y 
+                ON v.year_id = y.id
+            WHERE v.variable_id_id = ? & v.year_id = ? ;
+            """,
+            (variable_id, year_id),
+        ).fetchall()
+
+        year_list = list(map(int, query[0][0].split(","))) if query[0][0] else []
+        return sorted(year_list)
