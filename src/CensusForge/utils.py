@@ -194,7 +194,7 @@ class CensusUtils:
         """
         year_id = self.conn.execute(
             """
-            SELECT year FROM sqlite_db.year_table WHERE year=?;
+            SELECT id FROM sqlite_db.year_table WHERE year=?;
             """,
             (year,),
         ).fetchone()
@@ -359,20 +359,20 @@ class CensusUtils:
         year_list = list(map(int, query[0][0].split(","))) if query[0][0] else []
         return sorted(year_list)
 
-    def get_available_variables(self, variable: str, year: int):
+    def check_variables(self, dataset: str, variable: str, year: int):
+        dataset_id = self.get_database_id(name=dataset)
         variable_id = self.get_variable_id(name=variable)
         year_id = self.get_year_id(year=year)
         query = self.conn.execute(
-            """
-            SELECT 
-                GROUP_CONCAT(DISTINCT y.year) AS available_years
-            FROM sqlite_db.variable_interm AS v
-            INNER JOIN sqlite_db.year_table AS y 
-                ON v.year_id = y.id
-            WHERE v.variable_id_id = ? & v.year_id = ? ;
+            """ 
+            SELECT COUNT(*) 
+                FROM sqlite_db.variable_interm 
+                WHERE dataset_id=? AND var_id=? AND year_id=?;
             """,
-            (variable_id, year_id),
-        ).fetchall()
-
-        year_list = list(map(int, query[0][0].split(","))) if query[0][0] else []
-        return sorted(year_list)
+            (dataset_id, variable_id, year_id),
+        ).fetchone()
+        if query is None:
+            raise ValueError(
+                "Something has clearly gone really wrong please contact the developer"
+            )
+        return query[0]

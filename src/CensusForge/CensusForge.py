@@ -82,8 +82,12 @@ class CensusAPI(CensusUtils):
         if year not in self.get_available_years(dataset):
             raise ValueError(f"{year} is not available for the {dataset}")
 
+        # Check that the variable is available
         for param in params_list:
-            if param
+            if not self.check_variables(dataset=dataset, variable=param, year=year) > 0:
+                raise ValueError(
+                    f"The variable {param} is not available for the year {year} and dataset {dataset}"
+                )
 
         # Actual Query request
         df = pl.DataFrame(requests.get(url).json())
