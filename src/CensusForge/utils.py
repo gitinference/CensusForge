@@ -8,7 +8,7 @@ import geopandas as gpd
 from jp_tools import download
 
 
-class DataPull:
+class CensusUtils:
     def __init__(
         self,
         saving_dir: str = "data/",
@@ -194,7 +194,7 @@ class DataPull:
         """
         year_id = self.conn.execute(
             """
-            SELECT year FROM sqlite_db.year_table WHERE year=?;
+            SELECT id FROM sqlite_db.year_table WHERE year=?;
             """,
             (year,),
         ).fetchone()
@@ -223,7 +223,7 @@ class DataPull:
         """
         id = self.conn.execute(
             """
-            SELECT id FROM sqlite_db.variable_table WHERE dataset=?;
+            SELECT id FROM sqlite_db.variable_table WHERE var_name=?;
             """,
             (name,),
         ).fetchone()
@@ -337,5 +337,61 @@ class DataPull:
             (dataset_name,),
         ).fetchone()
         if name is None:
-            raise ValueError(f"{dataset_name} is not a valid database run REPLACE ME")
+            raise ValueError(
+                f"{dataset_name} is not a valid database run self.get_all_datasets()"
+            )
         return name[0]
+
+    def get_available_years(self, dataset: str):
+        """
+        Retrieves a sorted list of unique years available for a specific dataset.
+
+        Parameters
+        ----------
+        dataset : str
+            The name of the dataset used to look up the database ID.
+
+        Returns
+        -------
+        list[int]
+            A sorted list of unique integer years associated with the dataset.
+            Returns an empty list if no data is found.
+
+        Raises
+        ------
+        ValueError
+            If the dataset name is not found during the ID lookup.
+        """
+        dataset_id = self.get_database_id(name=dataset)
+        query = self.conn.execute(
+            """
+            SELECT 
+                GROUP_CONCAT(DISTINCT y.year) AS available_years
+            FROM sqlite_db.variable_interm AS v
+            INNER JOIN sqlite_db.year_table AS y 
+                ON v.year_id = y.id
+            WHERE v.dataset_id = ?;
+            """,
+            (dataset_id,),
+        ).fetchall()
+
+        year_list = list(map(int, query[0][0].split(","))) if query[0][0] else []
+        return sorted(year_list)
+
+    def check_variables(self, dataset: str, variable: str, year: int):
+        dataset_id = self.get_database_id(name=dataset)
+        variable_id = self.get_variable_id(name=variable)
+        year_id = self.get_year_id(year=year)
+        query = self.conn.execute(
+            """ 
+            SELECT COUNT(*) 
+                FROM sqlite_db.variable_interm 
+                WHERE dataset_id=? AND var_id=? AND year_id=?;
+            """,
+            (dataset_id, variable_id, year_id),
+        ).fetchone()
+        if query is None:
+            raise ValueError(
+                "Something has clearly gone really wrong please contact the developer"
+            )
+        return query[0]

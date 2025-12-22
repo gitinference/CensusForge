@@ -1,10 +1,10 @@
 import requests
 import polars as pl
 
-from .utils import DataPull
+from .utils import CensusUtils
 
 
-class CensusAPI(DataPull):
+class CensusAPI(CensusUtils):
     def __init__(
         self,
         saving_dir: str = "data/",
@@ -12,7 +12,7 @@ class CensusAPI(DataPull):
         census_key: str = "",
     ):
         """
-        Extends `DataPull` with methods for querying the U.S. Census API.
+        Extends `CensusUtils` with methods for querying the U.S. Census API.
         Provides a unified interface for retrieving metadata from the local
         CensusForge database and fetching remote Census data using HTTPS
         requests.
@@ -69,17 +69,33 @@ class CensusAPI(DataPull):
         The constructed URL is stored on the instance as `self.url` for
         debugging or reproducibility.
         """
+
+        # URL Constructor
         dataset_url = self.get_dataset_url(dataset_name=dataset)
         params = ",".join(params_list)
         url = (
             f"https://api.census.gov/data/{year}/{dataset_url[:-1]}?get={params}"
             + extra
         )
+        self.url = url
+        # Check that if the Year is available
+        if year not in self.get_available_years(dataset):
+            raise ValueError(f"{year} is not available for the {dataset}")
+
+        # Check that the variable is available
+        for param in params_list:
+            if not self.check_variables(dataset=dataset, variable=param, year=year) > 0:
+                raise ValueError(
+                    f"The variable {param} is not available for the year {year} and dataset {dataset}"
+                )
+
+        # Actual Query request
         df = pl.DataFrame(requests.get(url).json())
+
+        # Basic transformation to transform the data in panel Data
         names = df.select(pl.col("column_0")).transpose()
         df = df.drop("column_0").transpose()
         df = df.rename(names.to_dicts().pop())
-        self.url = url
 
         return pl.DataFrame(df)
 
