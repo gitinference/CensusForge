@@ -343,6 +343,25 @@ class CensusUtils:
         return name[0]
 
     def get_available_years(self, dataset: str):
+        """
+        Retrieves a sorted list of unique years available for a specific dataset.
+
+        Parameters
+        ----------
+        dataset : str
+            The name of the dataset used to look up the database ID.
+
+        Returns
+        -------
+        list[int]
+            A sorted list of unique integer years associated with the dataset.
+            Returns an empty list if no data is found.
+
+        Raises
+        ------
+        ValueError
+            If the dataset name is not found during the ID lookup.
+        """
         dataset_id = self.get_database_id(name=dataset)
         query = self.conn.execute(
             """
