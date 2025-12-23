@@ -1,5 +1,5 @@
 import requests
-import polars as pl
+import numpy as np
 
 from .utils import CensusUtils
 
@@ -61,7 +61,7 @@ class CensusAPI(CensusUtils):
 
         Returns
         -------
-        polars.DataFrame
+        numpy.array
             The Census API response as a table with proper column names.
 
         Notes
@@ -89,17 +89,9 @@ class CensusAPI(CensusUtils):
                     f"The variable {param} is not available for the year {year} and dataset {dataset}"
                 )
 
-        # Actual Query request
-        df = pl.DataFrame(requests.get(url).json())
+        return np.array(requests.get(url).json())
 
-        # Basic transformation to transform the data in panel Data
-        names = df.select(pl.col("column_0")).transpose()
-        df = df.drop("column_0").transpose()
-        df = df.rename(names.to_dicts().pop())
-
-        return pl.DataFrame(df)
-
-    def get_all_datasets(self) -> pl.DataFrame:
+    def get_all_datasets(self):
         """
         Returns a DataFrame containing all datasets stored in the local
         CensusForge metadata database.
@@ -117,5 +109,5 @@ class CensusAPI(CensusUtils):
             """
             SELECT * FROM sqlite_db.dataset_table;
             """
-        ).pl()
+        )
         return df

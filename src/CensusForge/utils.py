@@ -1,11 +1,17 @@
+from __future__ import annotations
+
 import importlib.resources as resources
 import logging
 import os
 import tempfile
+from typing import TYPE_CHECKING
 
 import duckdb
-import geopandas as gpd
+from geopandas import GeoDataFrame
 from jp_tools import download
+
+if TYPE_CHECKING:
+    import geopandas as gpd
 
 
 class CensusUtils:
@@ -59,26 +65,41 @@ class CensusUtils:
 
     def pull_geos(self, url: str, filename: str) -> gpd.GeoDataFrame:
         """
-        Downloads and caches a geographic file, returning it as a GeoDataFrame.
+        Fetch geographic data from a URL and cache it locally as a Parquet file.
 
-        If `filename` does not exist locally, the file is downloaded from
-        the given `url` into a temporary ZIP file, read using GeoPandas,
-        and then saved to Parquet at the specified filename. If the file
-        already exists, it is loaded directly from disk.
+        This method implements a 'download-once' logic: if the `filename` exists locally,
+        it loads the data immediately. Otherwise, it downloads the remote file (usually
+        a zipped shapefile), converts it to a GeoDataFrame, and serializes it to
+        Parquet format for faster subsequent reads.
 
         Parameters
         ----------
         url : str
-            URL of the geographic file (typically a zipped shapefile or
-            other GIS-compatible dataset).
+            The remote URL of the geographic dataset (e.g., a .zip containing
+            ESRI Shapefiles or a GeoJSON).
         filename : str
-            Local path to save or read the cached Parquet file.
+            The local file path (including .parquet extension) where the
+            dataset will be cached.
 
         Returns
         -------
         geopandas.GeoDataFrame
-            The loaded geographic dataset.
+            The geographic dataset loaded from the local cache or remote source.
+
+        Raises
+        ------
+        ImportError
+            If `geopandas` is not installed.
+        IOError
+            If the download fails or the directory for `filename` is not writable.
         """
+        try:
+            import geopandas as gpd
+        except ImportError:
+            raise ImportError(
+                "The 'GeoPandas' feature is required for this function. "
+                "Please install it using: pip install 'CensusForge[extra]'"
+            )
         if not os.path.exists(filename):
             temp_filename = f"{tempfile.gettempdir()}/{hash(filename)}.zip"
             download(url=url, filename=temp_filename)
