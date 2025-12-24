@@ -1,7 +1,7 @@
 import requests
 import numpy as np
 
-from .utils import CensusUtils
+from .utils import CensusUtils, retry_decorator
 
 
 class CensusAPI(CensusUtils):
@@ -35,6 +35,7 @@ class CensusAPI(CensusUtils):
 
         super().__init__(saving_dir, log_file)
 
+    @retry_decorator()
     def query(self, dataset: str, params_list: list, year: int, extra: str = ""):
         """
         Queries the U.S. Census API and returns the response as a
