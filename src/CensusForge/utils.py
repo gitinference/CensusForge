@@ -7,7 +7,6 @@ import tempfile
 from typing import TYPE_CHECKING
 
 import duckdb
-from geopandas import GeoDataFrame
 from jp_tools import download
 
 if TYPE_CHECKING:

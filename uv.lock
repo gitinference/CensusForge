@@ -177,7 +177,7 @@ wheels = [
 
 [[package]]
 name = "censusforge"
-version = "0.4.0"
+version = "0.4.1"
 source = { editable = "." }
 dependencies = [
     { name = "duckdb" },
@@ -194,6 +194,7 @@ extra = [
 [package.dev-dependencies]
 dev = [
     { name = "cairosvg" },
+    { name = "geopandas" },
     { name = "jupyter" },
     { name = "jupytext" },
     { name = "kaleido" },
@@ -216,6 +217,7 @@ provides-extras = ["extra"]
 [package.metadata.requires-dev]
 dev = [
     { name = "cairosvg", specifier = ">=2.8.2" },
+    { name = "geopandas", specifier = ">=1.1.2" },
     { name = "jupyter", specifier = ">=1.1.1" },
     { name = "jupytext", specifier = ">=1.18.1" },
     { name = "kaleido", specifier = ">=1.2.0" },
