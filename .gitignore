@@ -163,3 +163,8 @@ cython_debug/
 
 *.ddb
 *.wal
+
+
+# Ignore Notebook
+notebooks/*
+!notebooks/*.ipynb

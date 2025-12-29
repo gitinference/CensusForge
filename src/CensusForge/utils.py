@@ -4,10 +4,11 @@ import importlib.resources as resources
 import logging
 import os
 import tempfile
-from typing import TYPE_CHECKING
+import time
+from functools import wraps
+from typing import TYPE_CHECKING, Any, Callable
 
 import duckdb
-from geopandas import GeoDataFrame
 from jp_tools import download
 
 if TYPE_CHECKING:
@@ -399,7 +400,30 @@ class CensusUtils:
         year_list = list(map(int, query[0][0].split(","))) if query[0][0] else []
         return sorted(year_list)
 
-    def check_variables(self, dataset: str, variable: str, year: int):
+    def check_variables(self, dataset: str, variable: str, year: int) -> int:
+        """
+        Checks the existence and count of a specific variable within a dataset for a given year.
+
+        Parameters
+        ----------
+        dataset : str
+            The name of the dataset used to look up the database ID.
+        variable : str
+            The name of the variable used to look up the variable ID.
+        year : int
+            The specific year used to look up the year ID.
+
+        Returns
+        -------
+        int
+            The count of entries matching the dataset, variable, and year criteria.
+
+        Raises
+        ------
+        ValueError
+            If the database query fails to return a result or if an internal ID
+            lookup fails.
+        """
         dataset_id = self.get_database_id(name=dataset)
         variable_id = self.get_variable_id(name=variable)
         year_id = self.get_year_id(year=year)
@@ -416,3 +440,55 @@ class CensusUtils:
                 "Something has clearly gone really wrong please contact the developer"
             )
         return query[0]
+
+
+def retry_decorator[T](
+    retries: int = 3, delay: float = 1.0, backoff: float = 2.0
+) -> Callable[[Callable[..., T]], Callable[..., T]]:
+    """
+    A decorator that retries a function call upon encountering an exception
+    using an exponential backoff strategy.
+
+    Parameters
+    ----------
+    retries : int, optional
+        The maximum number of attempts to execute the function (default is 3).
+    delay : float, optional
+        The initial delay between retries in seconds (default is 1.0).
+    backoff : float, optional
+        The multiplier by which the delay increases after each failed attempt
+        (default is 2.0).
+
+    Returns
+    -------
+    Callable
+        A decorator that wraps the target function with retry logic and
+        preserves its type hint [T].
+
+    Raises
+    ------
+    Exception
+        Reraises the last encountered exception if all retry attempts fail.
+    RuntimeError
+        If the retry loop completes without returning or raising an
+        explicit error.
+    """
+
+    def decorator(func: Callable[..., T]) -> Callable[..., T]:
+        @wraps(func)
+        def wrapper(*args: Any, **kwargs: Any) -> T:
+            for attempt in range(1, retries + 1):
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    print(f"Attempt {attempt} failed: {e}")
+                    if attempt == retries:
+                        raise
+                    sleep_time = delay * (backoff ** (attempt - 1))
+                    print(f"Retrying in {sleep_time:.1f} seconds...")
+                    time.sleep(sleep_time)
+            raise RuntimeError("All retries failed")
+
+        return wrapper
+
+    return decorator

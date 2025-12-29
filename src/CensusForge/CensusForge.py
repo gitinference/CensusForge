@@ -1,7 +1,7 @@
 import requests
 import numpy as np
 
-from .utils import CensusUtils
+from .utils import CensusUtils, retry_decorator
 
 
 class CensusAPI(CensusUtils):
@@ -9,7 +9,6 @@ class CensusAPI(CensusUtils):
         self,
         saving_dir: str = "data/",
         log_file: str = "data_process.log",
-        census_key: str = "",
     ):
         """
         Extends `CensusUtils` with methods for querying the U.S. Census API.
@@ -37,37 +36,44 @@ class CensusAPI(CensusUtils):
 
     def query(self, dataset: str, params_list: list, year: int, extra: str = ""):
         """
-        Queries the U.S. Census API and returns the response as a
-        Polars DataFrame.
+        Queries the U.S. Census API and returns the response as a NumPy array.
 
-        Constructs a full API URL using the dataset name, list of query
-        parameters, selected year, and optional additional URL suffixes.
-        The request result is parsed from JSON into a DataFrame, with the
-        first row treated as column names.
+        Constructs a full API URL using the dataset name, query parameters,
+        and year. It validates both the availability of the year for the
+        specific dataset and the existence of each requested variable before
+        executing the request.
 
         Parameters
         ----------
         dataset : str
-            Dataset name, which must match an entry in the local
-            `dataset_table`.
+            The short name of the Census dataset (e.g., 'acs/acs5'). Must
+            correspond to a valid entry in the internal dataset table.
         params_list : list of str
-            List of variable names, geography codes, or other Census API
-            query fields.
+            A list of variable names or geography codes to retrieve
+            (e.g., ['NAME', 'B01001_001E']).
         year : int
-            Census dataset year.
+            The specific census year to query.
         extra : str, optional
-            Extra query-string components to append to the final API URL
-            (e.g., `&for=state:*`).
+            Additional query string parameters, such as geography filters
+            (e.g., "&for=state:06"). Defaults to an empty string.
 
         Returns
         -------
-        numpy.array
-            The Census API response as a table with proper column names.
+        numpy.ndarray
+            A 2D array where the first row contains the column headers and
+            subsequent rows contain the requested data.
+
+        Raises
+        ------
+        ValueError
+            If the requested 'year' is not supported by the dataset.
+            If any variable in 'params_list' is invalid for the given year/dataset.
 
         Notes
         -----
-        The constructed URL is stored on the instance as `self.url` for
-        debugging or reproducibility.
+        The final constructed URL is stored in `self.url` for debugging.
+        The actual HTTP request is handled by the internal `_query` method,
+        which includes retry logic.
         """
 
         # URL Constructor
@@ -89,6 +95,10 @@ class CensusAPI(CensusUtils):
                     f"The variable {param} is not available for the year {year} and dataset {dataset}"
                 )
 
+        return self._query(self.url)
+
+    @retry_decorator()
+    def _query(self, url: str):
         return np.array(requests.get(url).json())
 
     def get_all_datasets(self):
