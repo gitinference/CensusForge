@@ -1,6 +1,6 @@
 [project]
 name = "CensusForge"
-version = "0.4.1"
+version = "0.4.2"
 description = "Add your description here"
 readme = "README.md"
 authors = [{ name = "Alejandro Ouslan", email = "alejandro.ouslan@upr.edu" }]
@@ -8,6 +8,7 @@ requires-python = ">=3.12"
 dependencies = [
   "duckdb>=1.4.2",
   "jp-tools>=0.3.4",
+  "numpy>=2.4.0",
   "requests>=2.32.5",
   "setuptools>=80.9.0",
 ]
@@ -16,7 +17,9 @@ dependencies = [
 census-api = "CensusForge:main"
 
 [project.optional-dependencies]
-extra = ["geopandas>=1.1.2"]
+extra = [
+    "geopandas>=1.1.2",
+]
 
 [build-system]
 requires = ["hatchling"]
