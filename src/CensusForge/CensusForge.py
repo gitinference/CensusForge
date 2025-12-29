@@ -34,7 +34,15 @@ class CensusAPI(CensusUtils):
 
         super().__init__(saving_dir, log_file)
 
-    def query(self, dataset: str, params_list: list, year: int, extra: str = ""):
+    def query(
+        self,
+        dataset: str,
+        params_list: list,
+        year: int,
+        geography: str,
+        geography_filter: str | list = "*",
+        extra: str = "",
+    ):
         """
         Queries the U.S. Census API and returns the response as a NumPy array.
 
@@ -76,24 +84,33 @@ class CensusAPI(CensusUtils):
         which includes retry logic.
         """
 
-        # URL Constructor
-        dataset_url = self.get_dataset_url(dataset_name=dataset)
-        params = ",".join(params_list)
-        url = (
-            f"https://api.census.gov/data/{year}/{dataset_url[:-1]}?get={params}"
-            + extra
-        )
-        self.url = url
         # Check that if the Year is available
         if year not in self.get_available_years(dataset):
             raise ValueError(f"{year} is not available for the {dataset}")
 
         # Check that the variable is available
+        # TODO: improve the variable lookup as it takes too much time to quarry the database
         for param in params_list:
-            if not self.check_variables(dataset=dataset, variable=param, year=year) > 0:
+            if not self.check_variables(dataset=dataset, variable=param, year=year):
                 raise ValueError(
                     f"The variable {param} is not available for the year {year} and dataset {dataset}"
                 )
+        # Check that the geography is available
+        if not self.check_geography(dataset=dataset, geography=geography, year=year):
+            raise ValueError(
+                f"The variable {geography} is not available for the year {year} and dataset {dataset}"
+            )
+
+        # URL Constructor
+        dataset_url = self.get_dataset_url(dataset_name=dataset)
+        params = ",".join(params_list)
+        self.url = (
+            "https://api.census.gov/data/"
+            + f"{year}/{dataset_url[:-1]}?"
+            + f"get={params}&"
+            + f"for={geography}:{geography_filter}"
+            + extra
+        )
 
         return self._query(self.url)
 
@@ -121,3 +138,69 @@ class CensusAPI(CensusUtils):
             """
         )
         return df
+
+    def check_variables(self, dataset: str, variable: str, year: int) -> bool:
+        """
+        Checks the existence and count of a specific variable within a dataset for a given year.
+
+        Parameters
+        ----------
+        dataset : str
+            The name of the dataset used to look up the database ID.
+        variable : str
+            The name of the variable used to look up the variable ID.
+        year : int
+            The specific year used to look up the year ID.
+
+        Returns
+        -------
+        int
+            The count of entries matching the dataset, variable, and year criteria.
+
+        Raises
+        ------
+        ValueError
+            If the database query fails to return a result or if an internal ID
+            lookup fails.
+        """
+        dataset_id = self.get_database_id(name=dataset)
+        variable_id = self.get_variable_id(name=variable)
+        year_id = self.get_year_id(year=year)
+        query = self.conn.execute(
+            """ 
+            SELECT COUNT(*) 
+                FROM sqlite_db.variable_interm 
+                WHERE dataset_id=? AND var_id=? AND year_id=? 
+                LIMIT(1);
+            """,
+            (dataset_id, variable_id, year_id),
+        ).fetchone()
+        if query is None:
+            raise ValueError(
+                "Something has clearly gone really wrong please contact the developer"
+            )
+        if query[0] > 0:
+            return True
+        else:
+            return False
+
+    def check_geography(self, dataset: str, geography: str, year: int) -> bool:
+        dataset_id = self.get_database_id(name=dataset)
+        geo_id = self.get_geo_id(name=geography)
+        year_id = self.get_year_id(year=year)
+        query = self.conn.execute(
+            """ 
+            SELECT COUNT(*) 
+                FROM sqlite_db.geo_interm
+                WHERE dataset_id=? AND geo_id=? AND year_id=?;
+            """,
+            (dataset_id, geo_id, year_id),
+        ).fetchone()
+        if query is None:
+            raise ValueError(
+                "Something has clearly gone really wrong please contact the developer"
+            )
+        if query[0] > 0:
+            return True
+        else:
+            return False

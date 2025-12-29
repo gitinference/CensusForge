@@ -33,6 +33,7 @@ dev = [
   "jupytext>=1.18.1",
   "kaleido>=1.2.0",
   "pnglatex>=1.1",
+  "polars>=1.36.1",
   "pre-commit>=4.5.0",
   "pynvim>=0.6.0",
   "pyperclip>=1.11.0",
