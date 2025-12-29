@@ -275,7 +275,7 @@ class CensusUtils:
 
         id = self.conn.execute(
             """
-            SELECT id FROM sqlite_db.geo_table WHERE dataset=?;
+            SELECT id FROM sqlite_db.geo_table WHERE geo_name=?;
             """,
             (name,),
         ).fetchone()
@@ -399,47 +399,6 @@ class CensusUtils:
 
         year_list = list(map(int, query[0][0].split(","))) if query[0][0] else []
         return sorted(year_list)
-
-    def check_variables(self, dataset: str, variable: str, year: int) -> int:
-        """
-        Checks the existence and count of a specific variable within a dataset for a given year.
-
-        Parameters
-        ----------
-        dataset : str
-            The name of the dataset used to look up the database ID.
-        variable : str
-            The name of the variable used to look up the variable ID.
-        year : int
-            The specific year used to look up the year ID.
-
-        Returns
-        -------
-        int
-            The count of entries matching the dataset, variable, and year criteria.
-
-        Raises
-        ------
-        ValueError
-            If the database query fails to return a result or if an internal ID
-            lookup fails.
-        """
-        dataset_id = self.get_database_id(name=dataset)
-        variable_id = self.get_variable_id(name=variable)
-        year_id = self.get_year_id(year=year)
-        query = self.conn.execute(
-            """ 
-            SELECT COUNT(*) 
-                FROM sqlite_db.variable_interm 
-                WHERE dataset_id=? AND var_id=? AND year_id=?;
-            """,
-            (dataset_id, variable_id, year_id),
-        ).fetchone()
-        if query is None:
-            raise ValueError(
-                "Something has clearly gone really wrong please contact the developer"
-            )
-        return query[0]
 
 
 def retry_decorator[T](
