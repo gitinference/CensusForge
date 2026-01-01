@@ -147,6 +147,20 @@ pip install -e .
 
 ---
 
+## **Cite** 
+
+```bibtex
+@software{ouslan2026censusforge,
+    author       = {Ouslan, Alejandro},
+    title        = {CensusForge},
+    month        = jan,
+    year         = 2026,
+    publisher    = {Zenodo},
+    version      = {0.5.0},
+    doi          = {10.5281/zenodo.18121581},
+    url          = {https://doi.org/10.5281/zenodo.18121581}
+}
+
 ## **License**
 
 This project is licensed under the GNU General Public License v3.0 (GPL-3.0).
