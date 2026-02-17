@@ -42,6 +42,7 @@ class CensusAPI(CensusUtils):
         geography: str,
         geography_filter: str | list = "*",
         extra: str = "",
+        skip_checks: bool = False
     ):
         """
         Queries the U.S. Census API and returns the response as a NumPy array.
@@ -83,23 +84,23 @@ class CensusAPI(CensusUtils):
         The actual HTTP request is handled by the internal `_query` method,
         which includes retry logic.
         """
+        if not skip_checks:
+            # Check that if the Year is available
+            if year not in self.get_available_years(dataset):
+                raise ValueError(f"{year} is not available for the {dataset}")
 
-        # Check that if the Year is available
-        if year not in self.get_available_years(dataset):
-            raise ValueError(f"{year} is not available for the {dataset}")
-
-        # Check that the variable is available
-        # TODO: improve the variable lookup as it takes too much time to quarry the database
-        for param in params_list:
-            if not self.check_variables(dataset=dataset, variable=param, year=year):
+            # Check that the variable is available
+            # TODO: improve the variable lookup as it takes too much time to quarry the database
+            for param in params_list:
+                if not self.check_variables(dataset=dataset, variable=param, year=year):
+                    raise ValueError(
+                        f"The variable {param} is not available for the year {year} and dataset {dataset}"
+                    )
+            # Check that the geography is available
+            if not self.check_geography(dataset=dataset, geography=geography, year=year):
                 raise ValueError(
-                    f"The variable {param} is not available for the year {year} and dataset {dataset}"
+                    f"The variable {geography} is not available for the year {year} and dataset {dataset}"
                 )
-        # Check that the geography is available
-        if not self.check_geography(dataset=dataset, geography=geography, year=year):
-            raise ValueError(
-                f"The variable {geography} is not available for the year {year} and dataset {dataset}"
-            )
 
         # URL Constructor
         dataset_url = self.get_dataset_url(dataset_name=dataset)

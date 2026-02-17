@@ -400,6 +400,23 @@ class CensusUtils:
         year_list = list(map(int, query[0][0].split(","))) if query[0][0] else []
         return sorted(year_list)
 
+    def get_available_geo(self, dataset: str):
+        dataset_id = self.get_database_id(name=dataset)
+        query = self.conn.execute(
+            """
+            SELECT 
+                GROUP_CONCAT(DISTINCT y.id) AS available_geo
+            FROM sqlite_db.geo_interm AS v
+            INNER JOIN sqlite_db.geo_table AS y 
+                ON v.geo_id = y.id
+            WHERE v.dataset_id = ?;
+            """,
+            (dataset_id,),
+        ).fetchall()
+
+        year_list = list(map(int, query[0][0].split(","))) if query[0][0] else []
+        return sorted(year_list)
+
 
 def retry_decorator[T](
     retries: int = 3, delay: float = 1.0, backoff: float = 2.0
