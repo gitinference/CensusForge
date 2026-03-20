@@ -38,11 +38,12 @@ class CensusAPI(CensusUtils):
         self,
         dataset: str,
         params_list: list,
-        year: int,
         geography: str,
+        time: str | None = None,
+        year: int | None = None,
         geography_filter: str | list = "*",
         extra: str = "",
-        skip_checks: bool = False
+        skip_checks: bool = False,
     ):
         """
         Queries the U.S. Census API and returns the response as a NumPy array.
@@ -84,6 +85,15 @@ class CensusAPI(CensusUtils):
         The actual HTTP request is handled by the internal `_query` method,
         which includes retry logic.
         """
+        if time is not None and year is not None:
+            raise ValueError("Only one of 'time' or 'year' can be specified, not both.")
+
+        if time is None and year is None:
+            raise ValueError("You must provide either 'time' or 'year'.")
+
+        if time is not None:
+            year = 0
+
         if not skip_checks:
             # Check that if the Year is available
             if year not in self.get_available_years(dataset):
@@ -97,7 +107,9 @@ class CensusAPI(CensusUtils):
                         f"The variable {param} is not available for the year {year} and dataset {dataset}"
                     )
             # Check that the geography is available
-            if not self.check_geography(dataset=dataset, geography=geography, year=year):
+            if not self.check_geography(
+                dataset=dataset, geography=geography, year=year
+            ):
                 raise ValueError(
                     f"The variable {geography} is not available for the year {year} and dataset {dataset}"
                 )
@@ -105,13 +117,24 @@ class CensusAPI(CensusUtils):
         # URL Constructor
         dataset_url = self.get_dataset_url(dataset_name=dataset)
         params = ",".join(params_list)
-        self.url = (
-            "https://api.census.gov/data/"
-            + f"{year}/{dataset_url[:-1]}?"
-            + f"get={params}&"
-            + f"for={geography}:{geography_filter}"
-            + extra
-        )
+
+        if "timeseries" in dataset:
+            self.url = (
+                "https://api.census.gov/data/"
+                + f"{dataset_url[:-1]}?"
+                + f"get={params}&"
+                + f"time={year}&"
+                + f"for={geography}:{geography_filter}"
+                + extra
+            )
+        else:
+            self.url = (
+                "https://api.census.gov/data/"
+                + f"{year}/{dataset_url[:-1]}?"
+                + f"get={params}&"
+                + f"for={geography}:{geography_filter}"
+                + extra
+            )
 
         return self._query(self.url)
 
@@ -133,11 +156,9 @@ class CensusAPI(CensusUtils):
             Table of all available datasets, including IDs, names, URLs,
             and associated metadata fields.
         """
-        df = self.conn.execute(
-            """
+        df = self.conn.execute("""
             SELECT * FROM sqlite_db.dataset_table;
-            """
-        )
+            """)
         return df
 
     def check_variables(self, dataset: str, variable: str, year: int) -> bool:
