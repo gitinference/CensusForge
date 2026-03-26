@@ -34,7 +34,7 @@ pyproj==3.7.2
     # via geopandas
 python-dateutil==2.9.0.post0
     # via pandas
-requests==2.32.5
+requests==2.33.0
     # via
     #   censusforge (pyproject.toml)
     #   jp-tools
