@@ -1,5 +1,8 @@
 # **CensusForge**
 
+> [!IMPORTANT]  
+> Project development has moved to [Codeberg](https://codeberg.org/gitinference/CensusForge)
+
 > [!WARNING]  
 > This project is still in development and may change very quickly. I will add more
 > functionality in the future but this contains the bare minimum to support the needs
@@ -147,7 +150,7 @@ pip install -e .
 
 ---
 
-## **Cite** 
+## **Cite**
 
 ```bibtex
 @software{ouslan2026censusforge,
@@ -170,4 +173,3 @@ You may copy, modify, and distribute this software only under the terms of the G
 license.
 
 Full license text: <https://www.gnu.org/licenses/gpl-3.0.en.html>
-
