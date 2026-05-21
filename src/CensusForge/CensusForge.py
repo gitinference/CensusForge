@@ -7,6 +7,7 @@ from .utils import CensusUtils, retry_decorator
 class CensusAPI(CensusUtils):
     def __init__(
         self,
+        census_key: str,
         saving_dir: str = "data/",
         log_file: str = "data_process.log",
     ):
@@ -32,6 +33,7 @@ class CensusAPI(CensusUtils):
             An initialized CensusAPI instance.
         """
 
+        self.census_key = census_key
         super().__init__(saving_dir, log_file)
 
     def query(
@@ -119,6 +121,7 @@ class CensusAPI(CensusUtils):
             + f"get={params}&"
             + f"for={geography}:{geography_filter}"
             + extra
+            + f"&key={self.census_key}"
         )
 
         return self._query(self.url)
