@@ -1,156 +1,106 @@
 # **CensusForge**
 
-> [!IMPORTANT]  
-> Project development has moved to [Codeberg](https://codeberg.org/gitinference/CensusForge)
+A dedicated Python toolkit for retrieving processed data from the U.S. Census API. CensusForge abstracts complex interactions with Census datasets by providing a unified library interface, simplifying metadata retrieval, file management, and data manipulation into Polars or GeoPandas DataFrames.
 
-> [!WARNING]  
-> This project is still in development and may change very quickly. I will add more
-> functionality in the future but this contains the bare minimum to support the needs
-> of the project.
+## 🚀 Core Functionality
+CensusForge is engineered to handle the entire lifecycle of Census data analysis:
 
-CensusForge is a Python toolkit for retrieving data from the U.S. Census API while
-also leveraging a local SQLite metadata database for fast lookups, the SQLite
-database creation repo can be found [in this link in GitHub](https://github.com/gitinference/census-db).
-It simplifies working with Census datasets by providing a unified interface for:
+*   **Unified Access:** Provides cohesive wrappers for dataset querying via the official Census API endpoint.
+*   **Metadata Management:** Stores and queries local metadata (dataset IDs, variable names, geographic boundaries, year applicability) using an integrated SQLite database.
+*   **Data Handling:** Automatically handles downloading, caching, and integrating diverse file types (e.g., GeoJSON, Parquet).
 
-- Downloading and caching geographic files
-- Querying the Census API
-- Looking up dataset, variable, year, and geography metadata
-- Returning results as Polars or GeoPandas objects
-
-CensusForge consists of two main classes:
-
-- **`DataPull`** – Handles local metadata queries and file downloads
-- **`CensusAPI`** – Extends `DataPull` and adds direct Census API querying
+CensusForge encapsulates two main service classes:
+1.  **`DataPull`**: Manages local metadata persistence and geographic file downloads.
+2.  **`CensusAPI`**: Builds upon `DataPull` to construct and execute API queries against the Census Bureau services.
 
 ---
 
-## **Installation**
+## 🛠️ Installation & Setup
+
+To get started, ensure you have Python 3.9+ installed. Our dependencies include scientific computing libraries (`polars`, `geopandas`) and data retrieval tools.
 
 ```bash
-pip install CensusForge
+# Clone the repository (Must use Codeberg URL)
+git clone https://codeberg.org/gitinference/CensusForge.git CensusForge
+cd CensusForge
+
+# Install Python dependencies from requirements file
+pip install -r requirements.txt 
 ```
+*Note: Please consult the setup documentation within the repository for advanced instructions regarding virtual environments.*
 
 ---
 
-## **Quick Start Example**
+## ✨ Quick Start Example (API Query)
 
-The following example shows how to query the Census API using the `CensusAPI` class.
+This example demonstrates querying the most recent American Community Survey data available via `CensusAPI`.
 
 ```python
 from CensusForge import CensusAPI
 
-def main():
+def run_query():
+    """Queries and prints a sample Census dataset."""
     ca = CensusAPI()
-    print(
-        ca.query(
-            dataset="acs-acs1-pumspr",
-            year=2019,
-            params_list=["AGEP", "SCH", "SCHL", "HINCP", "PWGTP", "PUMA"],
-        )
+    print("--- Starting Data Pull ---")
+    df = ca.query(
+        dataset="acs-acs1-pumspr",  # Dataset ID for PUMS data
+        year=2019,                 # Target year
+        params_list=["AGEP", "SCH", "HINCP", "PUMA"], # Variables to include
     )
-
-if __name__ == "__main__":
-    main()
+    print("--- Data Pull Successful ---")
+    # The result is a Polars DataFrame: pl.DataFrame(...)
+    return df
 ```
 
-Running the above will:
+## 🧱 API Reference
 
-1. Look up the dataset in the local metadata database
-2. Construct the correct Census API URL
-3. Fetch the API response
-4. Convert it to a Polars DataFrame
-
----
-
-## **Project Structure**
-
-```
-CensusForge/
-│
-├── CensusAPI.py       # CensusAPI and DataPull classes
-├── database.db        # Local SQLite metadata database
-├── jp_tools/          # Utility functions (e.g., file download helper)
-│
-├── data/              # Output directory for downloaded/cached files
-└── README.md          # Project documentation
-```
-
----
-
-## **API Overview**
-
-### **CensusAPI**
-
+### `CensusAPI` Class
 #### `query(dataset, params_list, year, extra="") → pl.DataFrame`
+Queries and returns the requested Census dataset variables for a specified year and list of geographic parameters (e.g., state lists). The `extra` parameter allows appending URL query filters.
 
-Query a Census dataset using any set of variables or geography parameters.
-
-**Example**
-
+**Example:**
 ```python
 ca.query(
     dataset="acs-acs1-pumspr",
     year=2019,
     params_list=["AGEP", "HINCP", "PUMA"],
-    extra="&for=state:*"
+    extra="&for=state:*&geo=county:" # Example of additional URL filters
 )
 ```
 
----
+### DataPull Methods (Metadata Helpers)
+Methods inherited from `DataPull` are used for introspection against the local metadata database:
 
-### **Metadata Helpers (inherited from DataPull)**
+| Method | Description | Returns |
+| :--- | :--- | :--- |
+| `get_database(id)` | Retrieves descriptive name for a given dataset ID. | `str` |
+| `get_variable_id(name)` | Finds the internal unique ID for a variable name. | `str` |
+| `get_geo_years(dataset_id, geo_id)` | Returns a list of years available for a specific combination. | `list[int]` |
 
-| Method                              | Description                                 |
-| ----------------------------------- | ------------------------------------------- |
-| `get_database(id)`                  | Returns dataset name for ID                 |
-| `get_database_id(name)`             | Returns dataset ID                          |
-| `get_year(id)`                      | Returns year for ID                         |
-| `get_year_id(year)`                 | Returns year ID                             |
-| `get_variable_id(name)`             | Returns variable ID                         |
-| `get_geo_id(name)`                  | Returns geography type ID                   |
-| `get_geo_years(dataset_id, geo_id)` | Returns valid years for a dataset+geography |
-
----
-
-### **Geospatial Tools**
-
-#### `pull_geos(url, filename) → gpd.GeoDataFrame`
-
-Downloads a geographic file (if missing), caches it as Parquet, and returns a GeoDataFrame.
+### Geospatial Tools
+#### `pull_geos(url, filename)`
+Downloads or verifies the presence of required geographic data (e.g., Shapefile/GeoJSON). It caches the file as Parquet and returns an active GeoPandas DataFrame for immediate use.
 
 ---
 
-## **Requirements**
+## 💿 Project Structure
 
-- Python 3.9+
-- DuckDB
-- GeoPandas
-- Polars
-- Requests
-- jp_tools (for download helper)
-
-Install dependencies:
-
-```bash
-pip install -r requirements.txt
+```
+CensusForge/
+├── CensusAPI.py       # Contains core service classes (CensusAPI, DataPull)
+├── database.db        # Local SQLite metadata store
+├── requirements.txt   # Python dependencies list
+├── jp_tools/          # Utility functions (e.g., file download helper, cleaning scripts)
+│   └── ...
+├── data/              # Directory for cached and downloaded files (Parquet, etc.)
+└── README.md          # Project documentation
 ```
 
 ---
 
-## **Development**
+## 📐 Citation
 
-To run tests or modify the project:
-
-```bash
-git clone https://github.com/yourusername/CensusForge.git
-cd CensusForge
-pip install -e .
-```
-
----
-
-## **Cite**
+If you use CensusForge in your research or commercial project, please cite it using:
 
 ```bibtex
 @software{ouslan2026censusforge,
@@ -159,17 +109,12 @@ pip install -e .
     month        = jan,
     year         = 2026,
     publisher    = {Zenodo},
-    version      = {0.5.0},
-    doi          = {10.5281/zenodo.18121581},
-    url          = {https://doi.org/10.5281/zenodo.18121581}
+    version      = {1.0.0}, % Use the latest version!
+    doi          = {10.5281/zenodo.xxxxxxxxx} % Check Zenodo for updated DOI
 }
 ```
 
-## **License**
+---
 
-This project is licensed under the GNU General Public License v3.0 (GPL-3.0).
-
-You may copy, modify, and distribute this software only under the terms of the GPL-3.0
-license.
-
-Full license text: <https://www.gnu.org/licenses/gpl-3.0.en.html>
+## 📜 License
+This project is licensed under the GNU General Public License v3.0 (GPL-3.0). See the full [GPL-3.0 license](https://www.gnu.org/licenses/gpl-3.0.en.html).
