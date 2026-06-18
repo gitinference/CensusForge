@@ -1,0 +1,10 @@
+services:
+  mkdocs:
+    image: squidfunk/mkdocs-material
+    ports:
+      - "8005:8000"
+    volumes:
+      - ./mkdocs-data:/docs
+    command: serve -a 0.0.0.0:8000
+    stdin_open: true
+    tty: true

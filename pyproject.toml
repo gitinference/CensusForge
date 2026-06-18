@@ -32,6 +32,7 @@ dev = [
   "jupyter>=1.1.1",
   "jupytext>=1.18.1",
   "kaleido>=1.2.0",
+  "mkdocs-material>=9.7.6",
   "pnglatex>=1.1",
   "polars>=1.36.1",
   "pre-commit>=4.5.0",
