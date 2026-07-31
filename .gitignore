@@ -185,6 +185,11 @@ docs/aux/*
 docs/out/*
 qcew
 
+# Ignore Notebook
+notebooks/*
+!notebooks/*.ipynb
+
+
 # Devenv
 .devenv*
 devenv.local.nix
