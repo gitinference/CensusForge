@@ -198,6 +198,7 @@ class CensusAPI(CensusUtils):
             + f"get={params}&"
             + f"time={year}&"
             + extra
+            + f"&key={self.census_key}"
         )
 
         return self._query(self.url)
