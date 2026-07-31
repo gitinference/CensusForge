@@ -36,6 +36,8 @@ MANIFEST
 *.txt
 *.parquet
 
+!database.db
+
 # Exeption for requirements
 !requirements.txt
 
